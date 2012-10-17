@@ -16,7 +16,6 @@ function days () {
 
 
 	global $bdd;
-	$reponse = $bdd->query('SELECT DISTINCT date FROM playbot WHERE date > SUBDATE(NOW(), INTERVAL 1 MONTH) ORDER BY date DESC');
 
 	include('includes/header.php');
 	echo <<<INDEXHEAD
@@ -24,12 +23,70 @@ function days () {
 <div class="content">
 INDEXHEAD;
 
+
+
+	/***************************
+	* Génération du calendrier *
+	***************************/
+
+	// on récupère la date actuelle;
 	$year = date('Y');
 	$month = date('n');
-	$day = 0;
-	while ($donnees = $reponse->fetch()) {
-		echo "<a href='$donnees[0]'>$donnees[0]</a><br />\n";
+	$day = date('j');
+	$dayWeek = date('N', time() - ($day - 1)*3600*24); // jour de la semaine du premier du mois
+
+	// on récupère les jours du mois pour lesquels des liens ont été postés
+	$reponse = $bdd->query('SELECT DISTINCT DAY(date) FROM playbot WHERE MONTH(date) = MONTH(NOW()) ORDER BY date');
+
+
+	// en tête du tableau (mois, année)
+	echo "<table><thead><tr><td style='text-align: center' colspan='7'><a href='#'><<</a>  $month/$year  <a href='#'>>></a></td></tr></thead>\n"; 
+
+	// avant de parcourir les résultats, on se postionne au bon jour de la semaine
+	echo '<tr>';
+	for ($i=1; $i < $dayWeek; $i++) {
+		echo '<td></td>';
 	}
+	
+	// on parcours les résultats, on enregistre le jour courant du mois pour combler les trous
+	$curDay = 1;
+	while ($donnees = $reponse->fetch()) {
+		while ($curDay < $donnees[0]) {
+			if ($dayWeek == 1)
+				echo "\n</tr>\n</tr>\n";
+
+			echo "<td>$curDay</td>";
+
+			$curDay++;
+			$dayWeek++;
+			if ($dayWeek > 7)
+			       $dayWeek = 1;
+		}
+		
+		if ($dayWeek == 1)
+			echo "\n</tr>\n</tr>\n";
+
+		echo "<td><a href='$donnees[0]'>$donnees[0]</a></td>\n";
+
+		$curDay++;
+		$dayWeek++;
+		if ($dayWeek > 7)
+		       $dayWeek = 1;
+	}
+
+
+	// fin du tableau
+	for ($i=$dayWeek; $i <= 7; $i++) {
+		echo "<td>$curDay</td>";
+		$curDay++;
+	}
+	echo '</table>';
+
+	/*********************
+	 * fin du calendrier *
+	 *********************/
+
+
 
 	$app->render('stats.php');
 	echo <<<INDEXBOT
