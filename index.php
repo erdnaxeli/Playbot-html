@@ -51,27 +51,20 @@ INDEXHEAD;
 	// on parcours les résultats, on enregistre le jour courant du mois pour combler les trous
 	$curDay = 1;
 	while ($donnees = $reponse->fetch()) {
-		while ($curDay < $donnees[0]) {
+		while ($curDay <= $donnees[0]) {
 			if ($dayWeek == 1)
 				echo "\n</tr>\n</tr>\n";
 
-			echo "<td>$curDay</td>";
+			if ($curDay == $donnees[0])
+				echo "<td><a href='$donnees[0]'>$donnees[0]</a></td>\n";
+			else
+				echo "<td>$curDay</td>";
 
 			$curDay++;
 			$dayWeek++;
 			if ($dayWeek > 7)
 			       $dayWeek = 1;
 		}
-		
-		if ($dayWeek == 1)
-			echo "\n</tr>\n</tr>\n";
-
-		echo "<td><a href='$donnees[0]'>$donnees[0]</a></td>\n";
-
-		$curDay++;
-		$dayWeek++;
-		if ($dayWeek > 7)
-		       $dayWeek = 1;
 	}
 
 
