@@ -12,7 +12,7 @@ function days () {
 
 	# cache
 	$app->etag('index');
-	$app->expires('+12 hours');
+	$app->expires('+6 hours');
 
 
 	global $bdd;
@@ -35,6 +35,10 @@ INDEXHEAD;
 	// on récupère la date actuelle;
 	$year = date('Y');
 	$month = date('n') + $dif;
+	while ($month > 12) {
+		$year++;
+		$month -= 12;
+	}
 	$day = date('j');
 	$dayWeek = date('N', mktime(0, 0, 0, $month, 1, $year)); // jour de la semaine du premier du mois
 
