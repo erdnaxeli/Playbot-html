@@ -29,18 +29,21 @@ INDEXHEAD;
 	* Génération du calendrier *
 	***************************/
 
+	// décalage (mois précédent : $dif == -1)
+	$dif = (isset($_GET['dif'])) ? $_GET['dif'] : 0;
+
 	// on récupère la date actuelle;
 	$year = date('Y');
-	$month = date('n');
+	$month = date('n') + $dif;
 	$day = date('j');
-	$dayWeek = date('N', time() - ($day - 1)*3600*24); // jour de la semaine du premier du mois
+	$dayWeek = date('N', mktime(0, 0, 0, $month, 1, $year)); // jour de la semaine du premier du mois
 
 	// on récupère les jours du mois pour lesquels des liens ont été postés
-	$reponse = $bdd->query('SELECT DISTINCT DAY(date) FROM playbot WHERE MONTH(date) = MONTH(NOW()) ORDER BY date');
+	$reponse = $bdd->query('SELECT DISTINCT DAY(date) FROM playbot WHERE MONTH(date) = MONTH(NOW()) + '.$dif.' ORDER BY date');
 
 
 	// en tête du tableau (mois, année)
-	echo "<table class='calendar'><thead><tr><td style='text-align: center' colspan='7'><a href='#'><<</a>  $month/$year  <a href='#'>>></a></td></tr></thead>\n"; 
+	echo "<table class='calendar'><thead><tr><td style='text-align: center' colspan='7'><a href='?dif=". ($dif - 1) ."'><<</a>  $month/$year  <a href='?dif=". ($dif + 1) ."'>>></a></td></tr></thead>\n"; 
 
 	// avant de parcourir les résultats, on se postionne au bon jour de la semaine
 	echo '<tr>';
@@ -68,7 +71,7 @@ INDEXHEAD;
 
 
 	// fin du tableau
-	while ($curDay <= date('t')) {
+	while ($curDay <= date('t', mktime(0, 0, 0, $month, 1, $year))) {
 		if ($dayWeek == 1)
 			echo "\n</tr>\n</tr>\n";
 
@@ -79,8 +82,11 @@ INDEXHEAD;
 		if ($dayWeek > 7)
 		       $dayWeek = 1;
 	}
-	for ($i=$dayWeek; $i <= 7; $i++)
-		echo '<td></td>';
+	
+	if ($dayWeek != 1) 
+		for ($i=$dayWeek; $i <= 7; $i++)
+			echo '<td></td>';
+
 	echo "</tr></table>\n";
 
 	/*********************
