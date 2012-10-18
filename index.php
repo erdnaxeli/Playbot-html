@@ -40,13 +40,12 @@ INDEXHEAD;
 
 
 	// en tête du tableau (mois, année)
-	echo "<table><thead><tr><td style='text-align: center' colspan='7'><a href='#'><<</a>  $month/$year  <a href='#'>>></a></td></tr></thead>\n"; 
+	echo "<table class='calendar'><thead><tr><td style='text-align: center' colspan='7'><a href='#'><<</a>  $month/$year  <a href='#'>>></a></td></tr></thead>\n"; 
 
 	// avant de parcourir les résultats, on se postionne au bon jour de la semaine
 	echo '<tr>';
-	for ($i=1; $i < $dayWeek; $i++) {
+	for ($i=1; $i < $dayWeek; $i++)
 		echo '<td></td>';
-	}
 	
 	// on parcours les résultats, on enregistre le jour courant du mois pour combler les trous
 	$curDay = 1;
@@ -56,7 +55,7 @@ INDEXHEAD;
 				echo "\n</tr>\n</tr>\n";
 
 			if ($curDay == $donnees[0])
-				echo "<td><a href='$donnees[0]'>$donnees[0]</a></td>\n";
+				echo "<td><a href='$year-$month-$donnees[0]'>$donnees[0]</a></td>\n";
 			else
 				echo "<td>$curDay</td>";
 
@@ -69,11 +68,20 @@ INDEXHEAD;
 
 
 	// fin du tableau
-	for ($i=$dayWeek; $i <= 7; $i++) {
+	while ($curDay <= date('t')) {
+		if ($dayWeek == 1)
+			echo "\n</tr>\n</tr>\n";
+
 		echo "<td>$curDay</td>";
+
 		$curDay++;
+		$dayWeek++;
+		if ($dayWeek > 7)
+		       $dayWeek = 1;
 	}
-	echo '</table>';
+	for ($i=$dayWeek; $i <= 7; $i++)
+		echo '<td></td>';
+	echo "</tr></table>\n";
 
 	/*********************
 	 * fin du calendrier *
