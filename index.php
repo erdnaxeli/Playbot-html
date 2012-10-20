@@ -10,11 +10,6 @@ $app->get('/', 'days');
 function days () {
 	$app = Slim::getInstance();
 
-	# cache
-	$app->etag('index');
-	$app->expires('+6 hours');
-
-
 	global $bdd;
 
 	include('includes/header.php');
@@ -144,6 +139,10 @@ function day ($date) {
 	$req->execute();
 
 	include('includes/header.php');
+	printLinks ($req);
+}
+
+function printLinks ($req) {
 	echo <<<EOF
 <div class="header">Log d'activit&eacute; PlayBot</div>
 <div class="content">
@@ -156,13 +155,13 @@ EOF;
 		echo "<td>";
 		switch ($donnees[1]) {
 			case 'youtube':
-				echo "<a href='$donnees[2]'><img alt='youtube' src='img/yt.png' /></a>";
+				echo "<a href='$donnees[2]'><img alt='youtube' src='/links/img/yt.png' /></a>";
 				break;
 			case 'soundcloud':
-				echo "<a href='$donnees[2]'><img alt='soundcloud' src='img/sc.png' /></a>";
+				echo "<a href='$donnees[2]'><img alt='soundcloud' src='/links/img/sc.png' /></a>";
 				break;
 			case 'mixcloud':
-				echo "<a href='$donnees[2]'><img alt='mixcloud' src='img/mc.png' width='40px' /></a>";
+				echo "<a href='$donnees[2]'><img alt='mixcloud' src='/links/img/mc.png' width='40px' /></a>";
 				break;
 			default:
 				echo "<a href='$donnees[2]'>$donnees[1]</a>";
@@ -177,6 +176,34 @@ EOF;
 	echo "</table>\n";
 	echo "<br/>\n<div class='retour'><a href='/links'>Retour &agrave; la liste</a></div>\n</div>\n";
 }
+
+
+$app->get('/senders/', 'senders');
+function senders () {
+	global $bdd;
+	$req = $bdd->prepare('SELECT DISTINCT(sender_irc) FROM playbot');
+	$req->execute();
+
+	include('includes/header.php');
+	echo '<ul>';
+	while ($donnees = $req->fetch()) {
+		echo '<li><a href="'.$donnees[0].'">'.$donnees[0]."</a></li>\n";
+	}
+}
+
+
+$app->get('/senders/:sender', 'bySender');
+function bySender ($sender) {
+	global $bdd;
+
+	$req = $bdd->prepare('SELECT * FROM playbot WHERE sender_irc = :sender');
+	$req->bindParam(':sender', $sender, PDO::PARAM_STR);
+	$req->execute();
+
+	include('includes/header.php');
+	printLinks ($req);
+}
+
 
 
 $app->run();
