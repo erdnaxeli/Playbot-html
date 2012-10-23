@@ -6,7 +6,18 @@ $bdd = new PDO('mysql:host=mysql.iiens.net;dbname=assoce_nightiies', 'assoce_nig
 		PDO::ATTR_ERRMODE => PDO::ERRMODE_WARNING));
 
 
+
+// routes
+
 $app->get('/', 'days');
+$app->get('/senders/', 'senders');
+$app->get('/:date', 'day');
+$app->get('/fav', 'fav');
+$app->post('/fav', 'fav');
+$app->get('/senders/:sender', 'bySender');
+
+
+
 function days () {
 	$app = Slim::getInstance();
 
@@ -103,8 +114,6 @@ INDEXBOT;
 }
 
 
-$app->get('/fav', 'fav');
-$app->post('/fav', 'fav');
 function fav () {
 	include('/usr/share/php/openid/consumer/consumer.php');
 	$consumer   =& AriseOpenID::getInstance();
@@ -131,7 +140,6 @@ FORM;
 }
 
 
-$app->get('/:date', 'day');
 function day ($date) {
 	global $bdd;
 	$req = $bdd->prepare('SELECT * FROM playbot WHERE date = :date');
@@ -178,13 +186,13 @@ EOF;
 }
 
 
-$app->get('/senders/', 'senders');
 function senders () {
 	global $bdd;
 	$req = $bdd->prepare('SELECT DISTINCT(sender_irc) FROM playbot');
 	$req->execute();
 
 	include('includes/header.php');
+	echo '<p>Le regroupement des pseudos sera implémenté plus tard (kikoo Jonas !).</p>';
 	echo '<ul>';
 	while ($donnees = $req->fetch()) {
 		echo '<li><a href="'.$donnees[0].'">'.$donnees[0]."</a></li>\n";
@@ -192,7 +200,6 @@ function senders () {
 }
 
 
-$app->get('/senders/:sender', 'bySender');
 function bySender ($sender) {
 	global $bdd;
 
