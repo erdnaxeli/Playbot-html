@@ -9,13 +9,13 @@ $bdd = new PDO('mysql:host=mysql.iiens.net;dbname=assoce_nightiies', 'assoce_nig
 
 // routes
 
-$app->get('/', 'days');
-$app->get('/senders/', 'senders');
-$app->get('/:date', 'day');
-$app->get('/fav', 'fav');
-$app->post('/fav', 'fav');
 $app->get('/senders/:sender', 'bySender');
+$app->get('/senders/', 'senders');
+$app->get('/fav', 'fav');
+$app->get('/:date', 'day');
+$app->get('/', 'days');
 
+$app->post('/fav', 'fav');
 
 
 function days () {
