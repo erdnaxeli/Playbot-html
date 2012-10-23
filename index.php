@@ -7,6 +7,16 @@ $bdd = new PDO('mysql:host=mysql.iiens.net;dbname=assoce_nightiies', 'assoce_nig
 
 
 
+// openid
+include('/usr/share/php/openid/consumer/consumer.php');
+$consumer   =& AriseOpenID::getInstance();
+$openid_url =  !empty($_POST['openid_url']) ? $_POST['openid_url'] : NULL;
+//$consumer->setReturnTo('http://nightiies.iiens.net/links/fav');
+$consumer->authenticate($openid_url);
+	
+
+
+
 // routes
 
 $app->get('/senders/:sender', 'bySender');
@@ -115,17 +125,15 @@ INDEXBOT;
 
 
 function fav () {
-	include('/usr/share/php/openid/consumer/consumer.php');
-	$consumer   =& AriseOpenID::getInstance();
-	$openid_url =  !empty($_POST['openid_url']) ? $_POST['openid_url'] : NULL;
-	$consumer->setReturnTo('http://nightiies.iiens.net/links/fav');
-	$consumer->authenticate($openid_url);
-	
+	global $consumer;
+
 	include('includes/header.php');
 
 	if ($consumer->isLogged()) {
-		echo 'AHAH';
-		$consumer->logout();
+		echo <<<EOF
+<div class="header">Favoris</div>
+<div class="content">CONTENT !</div>
+EOF;
 	}
 	else {
 		echo <<<FORM
@@ -150,6 +158,7 @@ function day ($date) {
 	printLinks ($req);
 }
 
+
 function printLinks ($req) {
 	echo <<<EOF
 <div class="header">Log d'activit&eacute; PlayBot</div>
@@ -157,7 +166,7 @@ function printLinks ($req) {
 EOF;
 	echo "<table>\n";
 	echo "<tr class='table_header'>\n";
-	echo "<td>Lien</td><td>Posteur</td><td>Auteur de la musique</td><td>Titre de la musique</td>\n";
+	echo "<td>Lien</td><td>Posteur</td><td>Auteur de la musique</td><td>Titre de la musique</td><td>Favoris</td>\n";
 	while ($donnees = $req->fetch()) {
 		echo "<tr>\n";
 		echo "<td>";
@@ -175,10 +184,14 @@ EOF;
 				echo "<a href='$donnees[2]'>$donnees[1]</a>";
 				break;
 		}
-		echo "</td>\n";
-		echo "<td>$donnees[3]</td>\n";
-		echo "<td>$donnees[4]</td>\n";
-		echo "<td>$donnees[5]</td>\n</tr>\n";
+		echo <<<EOF
+</td>
+<td>$donnees[3]</td>
+<td>$donnees[4]</td>
+<td>$donnees[5]</td>
+<td style='text-align:center'><img src='/links/img/star.png' /></td>
+</tr>
+EOF;
 	}
 
 	echo "</table>\n";
