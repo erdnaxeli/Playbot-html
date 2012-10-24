@@ -11,8 +11,8 @@ $bdd = new PDO('mysql:host=mysql.iiens.net;dbname=assoce_nightiies', 'assoce_nig
 include('/usr/share/php/openid/consumer/consumer.php');
 $consumer   =& AriseOpenID::getInstance();
 $openid_url =  !empty($_POST['openid_url']) ? $_POST['openid_url'] : NULL;
-//$consumer->setReturnTo('http://nightiies.iiens.net/links/fav');
-$consumer->authenticate($openid_url);
+$required = array('http://openid.iiens.net/types/identifiant');
+$consumer->authenticate($openid_url, $required);
 	
 
 
@@ -25,7 +25,7 @@ $app->get('/fav', 'fav');
 $app->get('/:date', 'day');
 $app->get('/', 'days');
 
-$app->post('/fav', 'fav');
+$app->post('/fav', 'favPost');
 
 
 function days () {
@@ -121,19 +121,32 @@ INDEXHEAD;
 INDEXBOT;
 
 	$reponse->closeCursor();
+
+	echo <<<FOOTER
+</body>
+</html>
+FOOTER;
 }
 
 
 function fav () {
 	global $consumer;
+	global $bdd;
 
 	include('includes/header.php');
 
 	if ($consumer->isLogged()) {
+		$login = $consumer->getSingle('http://openid.iiens.net/types/identifiant');
+
+		$req = $bdd->prepare('SELECT date, type, url, sender_irc, sender, title, id FROM playbot_fav NATURAL JOIN playbot WHERE user = :login');
+		$req->bindParam(':login', $login);
+		$req->execute();
+
 		echo <<<EOF
 <div class="header">Favoris</div>
-<div class="content">CONTENT !</div>
 EOF;
+
+		printLinks ($req);
 	}
 	else {
 		echo <<<FORM
@@ -145,6 +158,51 @@ EOF;
 </div>
 FORM;
 	}
+
+	echo <<<FOOTER
+</body>
+</html>
+FOOTER;
+}
+
+
+function favPost () {
+	global $consumer;
+	global $bdd;
+	$app = Slim::getInstance();
+
+	if (!$consumer->isLogged()) {
+		$app->halt(500, 'User not connected');
+		return;
+	}
+
+	$login = $consumer->getSingle('http://openid.iiens.net/types/identifiant');
+
+	// on regarde si la vidéo est déjà dans les favoris
+	$req = $bdd->prepare('SELECT COUNT(*) FROM playbot_fav WHERE user = :user AND id = :id');
+	$req->bindParam(':user', $login);
+	$req->bindParam(':id', $_POST['id']);
+	$req->execute();
+	$isFav = $req->fetch();
+
+	// si oui, on la supprime
+	if ($isFav[0]) {
+		$req = $bdd->prepare('DELETE FROM playbot_fav WHERE user = :user AND id = :id');
+		$req->bindParam(':user', $login);
+		$req->bindParam(':id', $_POST['id']);
+		$req->execute();
+
+		echo '0';
+	}
+	// sinon on l'ajoute
+	else {
+		$req = $bdd->prepare('INSERT INTO playbot_fav(user, id) VALUES(:user, :id)');
+		$req->bindParam(':user', $login);
+		$req->bindParam(':id', $_POST['id']);
+		$req->execute();
+
+		echo '1';
+	}
 }
 
 
@@ -155,15 +213,22 @@ function day ($date) {
 	$req->execute();
 
 	include('includes/header.php');
+	echo <<<EOF
+<div class="header">Log d'activit&eacute; PlayBot</div>
+EOF;
 	printLinks ($req);
+
+	echo <<<FOOTER
+</body>
+</html>
+FOOTER;
 }
 
 
 function printLinks ($req) {
-	echo <<<EOF
-<div class="header">Log d'activit&eacute; PlayBot</div>
-<div class="content">
-EOF;
+	global $consumer;
+
+	echo '<div class="content">';
 	echo "<table>\n";
 	echo "<tr class='table_header'>\n";
 	echo "<td>Lien</td><td>Posteur</td><td>Auteur de la musique</td><td>Titre de la musique</td><td>Favoris</td>\n";
@@ -189,13 +254,37 @@ EOF;
 <td>$donnees[3]</td>
 <td>$donnees[4]</td>
 <td>$donnees[5]</td>
-<td style='text-align:center'><img src='/links/img/star.png' /></td>
-</tr>
 EOF;
+
+		if ($consumer->isLogged()) {
+			global $bdd;
+			$login = $consumer->getSingle('http://openid.iiens.net/types/identifiant');
+
+			$req2 = $bdd->prepare('SELECT * FROM playbot_fav WHERE user = :login AND id = :id');
+			$req2->bindParam(':login', $login);
+			$req2->bindParam(':id', $donnees[6]);
+			$req2->execute();
+
+			if ($req2->rowCount())
+				echo "<td style='text-align:center'><img onClick='fav(".$donnees[6].")' id='".$donnees[6]."' src='/links/img/star-full.png' /></td>";
+			else
+				echo "<td style='text-align:center'><img onClick='fav(".$donnees[6].")' id='".$donnees[6]."' src='/links/img/star.png' /></td>";
+		}
+		else
+			echo "<td style='text-align:center'><img onClick='fav(".$donnees[6].")' id='".$donnees[6]."' src='/links/img/star.png' /></td>";
+
 	}
 
-	echo "</table>\n";
-	echo "<br/>\n<div class='retour'><a href='/links'>Retour &agrave; la liste</a></div>\n</div>\n";
+	echo <<<EOF
+</tr>
+</table>
+<br/>\n<div class='retour'><a href='/links'>Retour &agrave; la liste</a></div>\n</div>
+EOF;
+
+	echo <<<FOOTER
+</body>
+</html>
+FOOTER;
 }
 
 
@@ -210,6 +299,11 @@ function senders () {
 	while ($donnees = $req->fetch()) {
 		echo '<li><a href="'.$donnees[0].'">'.$donnees[0]."</a></li>\n";
 	}
+
+	echo <<<FOOTER
+</body>
+</html>
+FOOTER;
 }
 
 
@@ -222,15 +316,15 @@ function bySender ($sender) {
 
 	include('includes/header.php');
 	printLinks ($req);
+
+	echo <<<FOOTER
+</body>
+</html>
+FOOTER;
 }
 
 
 
 $app->run();
-
-echo <<<FOOTER
-</body>
-</html>
-FOOTER;
 
 ?>
