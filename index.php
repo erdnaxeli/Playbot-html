@@ -138,19 +138,42 @@ function fav () {
 	if ($consumer->isLogged()) {
 		$login = $consumer->getSingle('http://openid.iiens.net/types/identifiant');
 
+		// affichage des liens
 		$req = $bdd->prepare('SELECT date, type, url, sender_irc, sender, title, id FROM playbot_fav NATURAL JOIN playbot WHERE user = :login');
 		$req->bindParam(':login', $login);
 		$req->execute();
 
-		echo <<<EOF
-<div class="header">Favoris</div>
-EOF;
-
+		echo '<div class="header">Favoris</div>';
 		printLinks ($req);
+	
+
+		// code pour irc
+		// on regarde si un code existe déjà, sinon on en génère un
+		$req = $bdd->prepare('SELECT code FROM playbot_codes WHERE user = :login');
+		$req->bindParam(':login', $login);
+		$req->execute();
+
+		if ($req->rowCount())
+			$code = current($req->fetch());
+		else {
+			$code = uniqid('PB', true);
+
+			$req = $bdd->prepare('INSERT INTO playbot_codes (user, code) VALUES (:login, :code)');
+			$req->bindParam(':login', $login);
+			$req->bindParam(':code', $code);
+			$req->execute();
+		}
+
+echo <<<EOF
+<div class='content'>
+<br/>
+Pour utiliser les favoris avec PlayBot, utiliser la commande suivante : « <em>/query PlayBot $code</em> ».
+</div>
+EOF;
 	}
 	else {
 		echo <<<FORM
-<div>
+<div class='content'>
 	<form method='post' action='/links/fav'>
 		Login arise : <input type='text' name='openid_url'>
 		<input type='submit'>
@@ -278,7 +301,6 @@ EOF;
 	echo <<<EOF
 </tr>
 </table>
-<br/>\n<div class='retour'><a href='/links'>Retour &agrave; la liste</a></div>\n</div>
 EOF;
 
 	echo <<<FOOTER
