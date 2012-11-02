@@ -312,7 +312,7 @@ FOOTER;
 
 function senders () {
 	global $bdd;
-	$req = $bdd->prepare('SELECT DISTINCT(sender_irc) FROM playbot');
+	$req = $bdd->prepare('SELECT DISTINCT(sender_irc) FROM playbot ORDER BY sender_irc');
 	$req->execute();
 
 	include('includes/header.php');
