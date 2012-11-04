@@ -296,8 +296,22 @@ EOF;
 		else
 			echo "<td style='text-align:center'><img onClick='fav(".$donnees[6].")' id='".$donnees[6]."' src='/links/img/star.png' /></td>";
 
+
 		// on affiche les tags
-		echo "<td>$donnees[7]</td>";
+		$tags = explode(',', $donnees[7]);
+		$first = true;
+		echo '<td>';
+
+		foreach ($tags as $tag) {
+			if ($first)
+				$first = false;
+			else
+				echo ' ';
+
+			echo "<a href='/links/tags/$tag'>$tag</a>";
+		}
+
+		echo '</td>';
 	}
 
 	echo <<<EOF
