@@ -231,7 +231,7 @@ function favPost () {
 
 function day ($date) {
 	global $bdd;
-	$req = $bdd->prepare('SELECT date, type, url, sender_irc, sender, title, id, GROUP_CONCAT(tag) FROM playbot NATURAL JOIN playbot_tags WHERE date = :date GROUP BY id');
+	$req = $bdd->prepare('SELECT date, type, url, sender_irc, sender, title, id, GROUP_CONCAT(tag) FROM playbot LEFT OUTER JOIN playbot_tags USING (id) WHERE date = :date GROUP BY id');
 	$req->bindParam(':date', $date, PDO::PARAM_STR);
 	$req->execute();
 
