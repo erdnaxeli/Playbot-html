@@ -388,6 +388,32 @@ FOOTER;
 }
 
 
+function byTag ($tag) {
+	global $bdd;
+
+	$req = $bdd->prepare('SELECT date, type, url, sender_irc, sender, title, id, GROUP_CONCAT(tag) AS tags FROM playbot NATURAL JOIN playbot_tags GROUP BY id HAVING tags LIKE (:tag) or tags LIKE (:tagBefore) OR tags LIKE (:tagAfter)');
+
+	$req->bindParam(':tag', $tag, PDO::PARAM_STR);
+
+	$tagBefore = $tag.',%';
+	$req->bindParam(':tagBefore', $tagBefore, PDO::PARAM_STR);
+
+	$tagAfter = '%,'.$tag.'%';
+	$req->bindParam(':tagAfter', $tagAfter, PDO::PARAM_STR);
+
+	$req->execute();
+
+
+	include('includes/header.php');
+	printLinks ($req);
+
+	echo <<<FOOTER
+</body>
+</html>
+FOOTER;
+}
+
+
 
 $app->run();
 
