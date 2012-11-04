@@ -334,6 +334,11 @@ function senders () {
 	$req->execute();
 
 	include('includes/header.php');
+	echo <<<EOF
+<div class='content'>
+<div class='header'>Liste des posteurs</div>
+<ul>
+EOF;
 	echo '<p>Le regroupement des pseudos sera implémenté plus tard (kikoo Jonas !).</p>';
 	echo '<ul>';
 	while ($donnees = $req->fetch()) {
@@ -341,6 +346,8 @@ function senders () {
 	}
 
 	echo <<<FOOTER
+</ul>
+</div>
 </body>
 </html>
 FOOTER;
