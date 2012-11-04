@@ -231,7 +231,7 @@ function favPost () {
 
 function day ($date) {
 	global $bdd;
-	$req = $bdd->prepare('SELECT * FROM playbot WHERE date = :date');
+	$req = $bdd->prepare('SELECT date, type, url, sender_irc, sender, title, id, GROUP_CONCAT(tag) FROM playbot NATURAL JOIN playbot_tags WHERE date = :date GROUP BY id');
 	$req->bindParam(':date', $date, PDO::PARAM_STR);
 	$req->execute();
 
@@ -254,7 +254,7 @@ function printLinks ($req) {
 	echo '<div class="content">';
 	echo "<table>\n";
 	echo "<tr class='table_header'>\n";
-	echo "<td>Lien</td><td>Posteur</td><td>Auteur de la musique</td><td>Titre de la musique</td><td>Favoris</td>\n";
+	echo "<td>Lien</td><td>Posteur</td><td>Auteur de la musique</td><td>Titre de la musique</td><td>Favoris</td><td>tags</td>\n";
 	while ($donnees = $req->fetch()) {
 		echo "<tr>\n";
 		echo "<td>";
@@ -296,6 +296,8 @@ EOF;
 		else
 			echo "<td style='text-align:center'><img onClick='fav(".$donnees[6].")' id='".$donnees[6]."' src='/links/img/star.png' /></td>";
 
+		// on affiche les tags
+		echo "<td>$donnees[7]</td>";
 	}
 
 	echo <<<EOF
@@ -332,7 +334,7 @@ FOOTER;
 function bySender ($sender) {
 	global $bdd;
 
-	$req = $bdd->prepare('SELECT * FROM playbot WHERE sender_irc = :sender');
+	$req = $bdd->prepare('SELECT date, type, url, sender_irc, sender, title, id, GROUP_CONCAT(tag) FROM playbot LEFT OUTER JOIN playbot_tags USING(id) WHERE sender_irc = :sender GROUP BY id');
 	$req->bindParam(':sender', $sender, PDO::PARAM_STR);
 	$req->execute();
 
