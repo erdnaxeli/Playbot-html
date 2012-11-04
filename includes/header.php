@@ -12,6 +12,7 @@
 			<ul>
 				<li><a href='/links/'>accueil</a></li>
 				<li><a href='/links/fav'>favoris</a></li>
-				<li><a href='/links/senders/'>musique par posteur</a></li>
+				<li><a href='/links/senders/'>posteurs</a></li>
+				<li><a href='/links/tags'>tags</a></li>
 			</ul>
 		</div>
