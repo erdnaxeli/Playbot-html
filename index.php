@@ -22,6 +22,8 @@ $consumer->authenticate($openid_url, $required);
 $app->get('/senders/:sender', 'bySender');
 $app->get('/senders/', 'senders');
 $app->get('/fav', 'fav');
+$app->get('/tags/:tag', 'byTag');
+$app->get('/tags/', 'tags');
 $app->get('/:date', 'day');
 $app->get('/', 'days');
 
@@ -339,6 +341,30 @@ function senders () {
 	}
 
 	echo <<<FOOTER
+</body>
+</html>
+FOOTER;
+}
+
+
+function tags () {
+	global $bdd;
+	$req = $bdd->prepare('SELECT DISTINCT(tag) FROM playbot_tags ORDER BY tag');
+	$req->execute();
+
+	include('includes/header.php');
+	echo <<<EOF
+<div class='content'>
+<div class='header'>Liste des tags</div>
+<ul>
+EOF;
+	while ($donnees = $req->fetch()) {
+		echo '<li><a href="'.$donnees[0].'">'.$donnees[0]."</a></li>\n";
+	}
+
+	echo <<<FOOTER
+</ul>
+</div>
 </body>
 </html>
 FOOTER;
