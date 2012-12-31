@@ -2,7 +2,7 @@
 require 'Slim/Slim.php';
 
 $app = new Slim();
-$bdd = new PDO('mysql:host=mysql.iiens.net;dbname=assoce_nightiies', 'assoce_nightiies', 'POiREAU.jKNCFfBRq', array(
+$bdd = new PDO('mysql:host=mysql.iiens.net;dbname=assoce_nightiies', 'assoce_nightiies', 'FVBbbjXtmfcQNnEp', array(
 		PDO::ATTR_ERRMODE => PDO::ERRMODE_WARNING));
 
 
@@ -356,18 +356,34 @@ FOOTER;
 
 function tags () {
 	global $bdd;
-	$req = $bdd->prepare('SELECT DISTINCT(tag) FROM playbot_tags ORDER BY tag');
+	$req = $bdd->prepare('SELECT tag, count(*) AS number FROM playbot_tags GROUP BY tag ORDER BY tag');
 	$req->execute();
+
+	$min = PHP_INT_MAX;
+	$max = - PHP_INT_MAX;
+
+	while ($tag = $req->fetch()) {
+		if ($tag['number'] < $min) $min = $tag['number'];
+		if ($tag['number'] > $max) $max = $tag['number'];
+		$tags[] = $tag;
+	}
+
+	$min_size = 10;
+	$max_size = 100;
+
+	foreach ($tags as $tag) {
+		$tag['size'] = intval($min_size + (($tag['number'] - $min) * (($max_size - $min_size) / ($max - $min))));
+		$tags_extended[] = $tag;
+	}
+
 
 	include('includes/header.php');
 	echo <<<EOF
 <div class='content'>
 <div class='header'>Liste des tags</div>
-<ul>
 EOF;
-	while ($donnees = $req->fetch()) {
-		echo '<li><a href="'.$donnees[0].'">'.$donnees[0]."</a></li>\n";
-	}
+	foreach ($tags_extended as $tag)
+		echo '<a style="font-size: '.$tag['size'].'px" href="'.$tag[0].'">'.$tag[0]."</a> ";
 
 	echo <<<FOOTER
 </ul>
