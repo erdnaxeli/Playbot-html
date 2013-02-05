@@ -381,12 +381,13 @@ function tags () {
 	echo <<<EOF
 <div class='content'>
 <div class='header'>Liste des tags</div>
+<div class='tags'>
 EOF;
 	foreach ($tags_extended as $tag)
 		echo '<a style="font-size: '.$tag['size'].'px" href="'.$tag[0].'">'.$tag[0]."</a> ";
 
 	echo <<<FOOTER
-</ul>
+</div>
 </div>
 </body>
 </html>
