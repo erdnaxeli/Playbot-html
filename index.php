@@ -53,15 +53,22 @@ INDEXHEAD;
 	// on récupère la date actuelle;
 	$year = date('Y');
 	$month = date('n') + $dif;
+
 	while ($month > 12) {
 		$year++;
 		$month -= 12;
 	}
+
+	while ($month < 1) {
+		$year--;
+		$month += 12;
+	}
+
 	$day = date('j');
 	$dayWeek = date('N', mktime(0, 0, 0, $month, 1, $year)); // jour de la semaine du premier du mois
 
 	// on récupère les jours du mois pour lesquels des liens ont été postés
-	$reponse = $bdd->query('SELECT DISTINCT DAY(date) FROM playbot WHERE MONTH(date) = MONTH(NOW()) + '.$dif.' ORDER BY date');
+	$reponse = $bdd->query('SELECT DISTINCT DAY(date) FROM playbot WHERE MONTH(date) = '.$month.' AND YEAR(date) = '.$year.' ORDER BY date');
 
 
 	// en tête du tableau (mois, année)
