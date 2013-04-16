@@ -2,7 +2,7 @@
 require 'Slim/Slim.php';
 
 $app = new Slim();
-$bdd = new PDO('mysql:host=mysql.iiens.net;dbname=assoce_nightiies', 'assoce_nightiies', 'FVBbbjXtmfcQNnEp', array(
+$bdd = new PDO('mysql:host=mysql.iiens.net;dbname=assoce_nightiies', 'assoce_nightiies', 'VwuQREP5JwJQTF5h', array(
 		PDO::ATTR_ERRMODE => PDO::ERRMODE_WARNING));
 
 
@@ -19,23 +19,25 @@ $consumer->authenticate($openid_url, $required);
 
 // routes
 
-$app->get('/senders/:sender', 'bySender');
-$app->get('/senders/', 'senders');
-$app->get('/fav', 'fav');
-$app->get('/tags/:tag', 'byTag');
-$app->get('/tags/', 'tags');
-$app->get('/:date', 'day');
-$app->get('/', 'days');
+$app->get('/:chan/senders/:sender', 'bySender');
+$app->get('/:chan/senders/', 'senders');
+$app->get('/:chan/fav', 'fav');
+$app->get('/:chan/tags/:tag', 'byTag');
+$app->get('/:chan/tags/', 'tags');
+$app->get('/:chan/:date', 'day');
+$app->get('/:chan/', 'days');
+$app->get('/', 'index');
 
-$app->post('/fav', 'favPost');
+$app->post('/:chan/fav', 'favPost');
 
 
-function days () {
+function days ($chanUrl) {
 	$app = Slim::getInstance();
 
 	global $bdd;
 
 	include('includes/header.php');
+	include('includes/menu.php');
 	echo <<<INDEXHEAD
 <div class="header">Log d'activit&eacute; PlayBot</div>
 <div class="content">
@@ -138,11 +140,12 @@ FOOTER;
 }
 
 
-function fav () {
+function fav ($chanUrl) {
 	global $consumer;
 	global $bdd;
 
 	include('includes/header.php');
+	include('includes/menu.php');
 
 	if ($consumer->isLogged()) {
 		$login = $consumer->getSingle('http://openid.iiens.net/types/identifiant');
@@ -198,7 +201,7 @@ FOOTER;
 }
 
 
-function favPost () {
+function favPost ($chanUrl) {
 	global $consumer;
 	global $bdd;
 	$app = Slim::getInstance();
@@ -238,13 +241,16 @@ function favPost () {
 }
 
 
-function day ($date) {
+function day ($chanUrl, $date) {
 	global $bdd;
-	$req = $bdd->prepare('SELECT date, type, url, sender_irc, sender, title, id, GROUP_CONCAT(tag) FROM playbot LEFT OUTER JOIN playbot_tags USING (id) WHERE date = :date GROUP BY id');
+	$chan = '#'.$chanUrl;
+	$req = $bdd->prepare('SELECT date, type, url, sender_irc, sender, title, id, GROUP_CONCAT(tag) FROM playbot LEFT OUTER JOIN playbot_tags USING (id) WHERE date = :date AND chan = :chan GROUP BY id');
 	$req->bindParam(':date', $date, PDO::PARAM_STR);
+	$req->bindParam(':chan', $chan, PDO::PARAM_STR);
 	$req->execute();
 
 	include('includes/header.php');
+	include('includes/menu.php');
 	echo <<<EOF
 <div class="header">Log d'activit&eacute; PlayBot</div>
 EOF;
@@ -335,12 +341,15 @@ FOOTER;
 }
 
 
-function senders () {
+function senders ($chanUrl) {
 	global $bdd;
-	$req = $bdd->prepare('SELECT DISTINCT(sender_irc) FROM playbot ORDER BY sender_irc');
+	$chan = '#'.$chanUrl;
+	$req = $bdd->prepare('SELECT DISTINCT(sender_irc) FROM playbot WHERE chan = :chan ORDER BY sender_irc');
+	$req->bindParam(':chan', $chan, PDO::PARAM_STR);
 	$req->execute();
 
 	include('includes/header.php');
+	include('includes/menu.php');
 	echo <<<EOF
 <div class='content'>
 <div class='header'>Liste des posteurs</div>
@@ -361,9 +370,11 @@ FOOTER;
 }
 
 
-function tags () {
+function tags ($chanUrl) {
 	global $bdd;
-	$req = $bdd->prepare('SELECT tag, count(*) AS number FROM playbot_tags GROUP BY tag ORDER BY tag');
+	$chan = '#'.$chanUrl;
+	$req = $bdd->prepare('SELECT tag, count(*) AS number FROM playbot_tags NATURAL JOIN playbot WHERE chan = :chan GROUP BY tag ORDER BY tag');
+	$req->bindParam(':chan', $chan, PDO::PARAM_STR);
 	$req->execute();
 
 	$min = PHP_INT_MAX;
@@ -374,22 +385,33 @@ function tags () {
 		if ($tag['number'] > $max) $max = $tag['number'];
 		$tags[] = $tag;
 	}
-
-	$min_size = 10;
-	$max_size = 100;
-
-	foreach ($tags as $tag) {
-		$tag['size'] = intval($min_size + (($tag['number'] - $min) * (($max_size - $min_size) / ($max - $min))));
-		$tags_extended[] = $tag;
-	}
-
-
+	
 	include('includes/header.php');
+	include('includes/menu.php');
+
 	echo <<<EOF
 <div class='content'>
 <div class='header'>Liste des tags</div>
 <div class='tags'>
 EOF;
+
+	if (!$tags) {
+		echo '<p>Y a pas grand chose :(</p>';
+		return;
+	}
+
+	$min_size = 10;
+	$max_size = 100;
+
+	foreach ($tags as $tag) {
+		if ($max - $min != 0)
+			$tag['size'] = intval($min_size + (($tag['number'] - $min) * (($max_size - $min_size) / ($max - $min))));
+		else
+			$tag['size'] = $max_size / 2;
+		$tags_extended[] = $tag;
+	}
+
+
 	foreach ($tags_extended as $tag)
 		echo '<a style="font-size: '.$tag['size'].'px" href="'.$tag[0].'">'.$tag[0]."</a> ";
 
@@ -402,14 +424,16 @@ FOOTER;
 }
 
 
-function bySender ($sender) {
+function bySender ($chanUrl, $sender) {
 	global $bdd;
-
-	$req = $bdd->prepare('SELECT date, type, url, sender_irc, sender, title, id, GROUP_CONCAT(tag) FROM playbot LEFT OUTER JOIN playbot_tags USING(id) WHERE sender_irc = :sender GROUP BY id');
+	$chan = '#'.$chanUrl;
+	$req = $bdd->prepare('SELECT date, type, url, sender_irc, sender, title, id, GROUP_CONCAT(tag) FROM playbot LEFT OUTER JOIN playbot_tags USING(id) WHERE sender_irc = :sender AND chan = :chan GROUP BY id');
 	$req->bindParam(':sender', $sender, PDO::PARAM_STR);
+	$req->bindParam(':chan', $chan, PDO::PARAM_STR);
 	$req->execute();
 
 	include('includes/header.php');
+	include('includes/menu.php');
 	printLinks ($req);
 
 	echo <<<FOOTER
@@ -419,12 +443,14 @@ FOOTER;
 }
 
 
-function byTag ($tag) {
+function byTag ($chanUrl, $tag) {
 	global $bdd;
+	$chan = '#'.$chanUrl;
 
-	$req = $bdd->prepare('SELECT date, type, url, sender_irc, sender, title, id, GROUP_CONCAT(tag) AS tags FROM playbot NATURAL JOIN playbot_tags GROUP BY id HAVING tags LIKE (:tag) or tags LIKE (:tagBefore) OR tags LIKE (:tagAfter)');
+	$req = $bdd->prepare('SELECT date, type, url, sender_irc, sender, title, id, GROUP_CONCAT(tag) AS tags FROM playbot NATURAL JOIN playbot_tags WHERE chan = :chan GROUP BY id HAVING tags LIKE (:tag) or tags LIKE (:tagBefore) OR tags LIKE (:tagAfter)');
 
 	$req->bindParam(':tag', $tag, PDO::PARAM_STR);
+	$req->bindParam(':chan', $chan, PDO::PARAM_STR);
 
 	$tagBefore = $tag.',%';
 	$req->bindParam(':tagBefore', $tagBefore, PDO::PARAM_STR);
@@ -436,6 +462,7 @@ function byTag ($tag) {
 
 
 	include('includes/header.php');
+	include('includes/menu.php');
 	printLinks ($req);
 
 	echo <<<FOOTER
@@ -444,6 +471,25 @@ function byTag ($tag) {
 FOOTER;
 }
 
+
+function index () {
+	global $bdd;
+
+	$req = $bdd->prepare('SELECT chan FROM playbot GROUP BY chan');
+	$req->execute();
+	
+	include('includes/header.php');
+
+	echo '<ul>';
+	while ($chan = $req->fetch())
+		echo "<li><a href='".substr($chan[0],1)."'>$chan[0]</a></li>";
+
+	echo <<<FOOTER
+</ul>
+</body>
+</html>
+FOOTER;
+}
 
 
 $app->run();
