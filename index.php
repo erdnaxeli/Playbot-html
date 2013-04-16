@@ -33,6 +33,7 @@ $app->post('/:chan/fav', 'favPost');
 
 function days ($chanUrl) {
 	$app = Slim::getInstance();
+	$chan = '#'.$chanUrl;
 
 	global $bdd;
 
@@ -70,7 +71,9 @@ INDEXHEAD;
 	$dayWeek = date('N', mktime(0, 0, 0, $month, 1, $year)); // jour de la semaine du premier du mois
 
 	// on récupère les jours du mois pour lesquels des liens ont été postés
-	$reponse = $bdd->query('SELECT DISTINCT DAY(date) FROM playbot WHERE MONTH(date) = '.$month.' AND YEAR(date) = '.$year.' ORDER BY date');
+	$reponse = $bdd->prepare('SELECT DISTINCT DAY(date) FROM playbot WHERE MONTH(date) = '.$month.' AND YEAR(date) = '.$year.' AND chan = :chan ORDER BY date');
+	$reponse->bindParam(':chan', $chan, PDO::PARAM_STR);
+	$reponse->execute();
 
 
 	// en tête du tableau (mois, année)
@@ -125,9 +128,28 @@ INDEXHEAD;
 	 *********************/
 
 
+	$nbr_senders = $bdd->prepare('SELECT sender_irc, COUNT(*) AS nb FROM playbot WHERE chan = :chan GROUP BY sender_irc ORDER BY nb DESC LIMIT 5');
+	$nbr_senders->bindParam(':chan', $chan, PDO::PARAM_STR);
+	$nbr_senders->execute();
 
-	$app->render('stats.php');
+	$nbr_types =  $bdd->prepare('SELECT type, COUNT(*) AS nb FROM playbot WHERE chan = :chan GROUP BY type ORDER BY nb DESC');
+	$nbr_types->bindParam(':chan', $chan, PDO::PARAM_STR);
+	$nbr_types->execute();
+
+	echo "<h2>Top 5 des posteurs de liens</h2>\n<ul>\n";
+
+	while ($donnees = $nbr_senders->fetch()) {
+		echo "<li><strong>$donnees[0] :</strong> $donnees[1]</li>\n";
+	}
+
+	echo "</ul>\n<h2>Top des sites</h2>\n<ul>\n";
+
+	while ($donnees = $nbr_types->fetch()) {
+		echo "<li><strong>$donnees[0] :</strong> $donnees[1]</li>\n";
+	}
+
 	echo <<<INDEXBOT
+</ul>
 </div>
 INDEXBOT;
 
