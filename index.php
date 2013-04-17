@@ -291,9 +291,10 @@ function printLinks ($req) {
 	echo '<div class="content">';
 	echo "<table>\n";
 	echo "<tr class='table_header'>\n";
-	echo "<td>Lien</td><td>Posteur</td><td>Auteur de la musique</td><td>Titre de la musique</td><td>Favoris</td><td>tags</td>\n";
+	echo "<td>id</td><td>Lien</td><td>Posteur</td><td>Auteur de la musique</td><td>Titre de la musique</td><td>Favoris</td><td>tags</td>\n";
 	while ($donnees = $req->fetch()) {
 		echo "<tr>\n";
+		echo "<td>".$donnees[6]."</td>\n";
 		echo "<td>";
 		switch ($donnees[1]) {
 			case 'youtube':
