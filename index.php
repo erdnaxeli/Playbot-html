@@ -28,7 +28,7 @@ $app->get('/:chan/:date', 'day');
 $app->get('/:chan/', 'days');
 $app->get('/', 'index');
 
-$app->post('/:chan/fav', 'favPost');
+$app->post('/fav', 'favPost');
 
 
 function days ($chanUrl) {
@@ -223,7 +223,7 @@ FOOTER;
 }
 
 
-function favPost ($chanUrl) {
+function favPost () {
 	global $consumer;
 	global $bdd;
 	$app = Slim::getInstance();
