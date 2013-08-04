@@ -178,7 +178,7 @@ function fav ($chanUrl) {
 		$req->execute();
 
 		echo '<div class="header">Favoris</div>';
-		printLinks ($req);
+		printLinks ($req, $chanUrl);
 	
 
 		// code pour irc
@@ -276,7 +276,7 @@ function day ($chanUrl, $date) {
 	echo <<<EOF
 <div class="header">Log d'activit&eacute; PlayBot</div>
 EOF;
-	printLinks ($req);
+	printLinks ($req, $chanUrl);
 
 	echo <<<FOOTER
 </body>
@@ -285,7 +285,7 @@ FOOTER;
 }
 
 
-function printLinks ($req) {
+function printLinks ($req, $chan) {
 	global $consumer;
 
 	echo '<div class="content">';
@@ -346,7 +346,7 @@ EOF;
 			else
 				echo ' ';
 
-			echo "<a href='/links/tags/$tag'>$tag</a>";
+			echo "<a href='/links/$chan/tags/$tag'>$tag</a>";
 		}
 
 		echo '</td>';
@@ -457,7 +457,7 @@ function bySender ($chanUrl, $sender) {
 
 	include('includes/header.php');
 	include('includes/menu.php');
-	printLinks ($req);
+	printLinks ($req, $chanUrl);
 
 	echo <<<FOOTER
 </body>
@@ -486,7 +486,7 @@ function byTag ($chanUrl, $tag) {
 
 	include('includes/header.php');
 	include('includes/menu.php');
-	printLinks ($req);
+	printLinks ($req, $chanUrl);
 
 	echo <<<FOOTER
 </body>
