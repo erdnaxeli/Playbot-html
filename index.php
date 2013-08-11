@@ -19,6 +19,7 @@ $consumer->authenticate($openid_url, $required);
 
 // routes
 
+$app->get('/fav', 'fav');
 $app->get('/:chan/senders/:sender', 'bySender');
 $app->get('/:chan/senders/', 'senders');
 $app->get('/:chan/fav', 'fav');
@@ -162,7 +163,7 @@ FOOTER;
 }
 
 
-function fav ($chanUrl) {
+function fav ($chanUrl = '') {
 	global $consumer;
 	global $bdd;
 
