@@ -267,7 +267,7 @@ function favPost () {
 function day ($chanUrl, $date) {
 	global $bdd;
 	$chan = '#'.$chanUrl;
-	$req = $bdd->prepare('SELECT date, type, url, sender_irc, sender, title, id, GROUP_CONCAT(tag) FROM playbot LEFT OUTER JOIN playbot_tags USING (id) WHERE date = :date AND chan = :chan GROUP BY id');
+	$req = $bdd->prepare('SELECT date, type, url, sender_irc, sender, title, id, GROUP_CONCAT(tag) FROM playbot LEFT OUTER JOIN playbot_tags USING (id) WHERE date = :date AND chan = :chan AND context = 0 GROUP BY id');
 	$req->bindParam(':date', $date, PDO::PARAM_STR);
 	$req->bindParam(':chan', $chan, PDO::PARAM_STR);
 	$req->execute();
@@ -397,7 +397,7 @@ FOOTER;
 function tags ($chanUrl) {
 	global $bdd;
 	$chan = '#'.$chanUrl;
-	$req = $bdd->prepare('SELECT tag, count(*) AS number FROM playbot_tags NATURAL JOIN playbot WHERE chan = :chan GROUP BY tag ORDER BY tag');
+	$req = $bdd->prepare('SELECT tag, count(*) AS number FROM playbot_tags NATURAL JOIN playbot WHERE chan = :chan AND context = 0 GROUP BY tag ORDER BY tag');
 	$req->bindParam(':chan', $chan, PDO::PARAM_STR);
 	$req->execute();
 
@@ -451,7 +451,7 @@ FOOTER;
 function bySender ($chanUrl, $sender) {
 	global $bdd;
 	$chan = '#'.$chanUrl;
-	$req = $bdd->prepare('SELECT date, type, url, sender_irc, sender, title, id, GROUP_CONCAT(tag) FROM playbot LEFT OUTER JOIN playbot_tags USING(id) WHERE sender_irc = :sender AND chan = :chan GROUP BY id');
+	$req = $bdd->prepare('SELECT date, type, url, sender_irc, sender, title, id, GROUP_CONCAT(tag) FROM playbot LEFT OUTER JOIN playbot_tags USING(id) WHERE sender_irc = :sender AND chan = :chan AND context = 0 GROUP BY id');
 	$req->bindParam(':sender', $sender, PDO::PARAM_STR);
 	$req->bindParam(':chan', $chan, PDO::PARAM_STR);
 	$req->execute();
@@ -471,7 +471,7 @@ function byTag ($chanUrl, $tag) {
 	global $bdd;
 	$chan = '#'.$chanUrl;
 
-	$req = $bdd->prepare('SELECT date, type, url, sender_irc, sender, title, id, GROUP_CONCAT(tag) AS tags FROM playbot NATURAL JOIN playbot_tags WHERE chan = :chan GROUP BY id HAVING tags LIKE (:tag) or tags LIKE (:tagBefore) OR tags LIKE (:tagAfter)');
+	$req = $bdd->prepare('SELECT date, type, url, sender_irc, sender, title, id, GROUP_CONCAT(tag) AS tags FROM playbot NATURAL JOIN playbot_tags WHERE chan = :chan AND context = 0 GROUP BY id HAVING tags LIKE (:tag) or tags LIKE (:tagBefore) OR tags LIKE (:tagAfter)');
 
 	$req->bindParam(':tag', $tag, PDO::PARAM_STR);
 	$req->bindParam(':chan', $chan, PDO::PARAM_STR);
