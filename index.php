@@ -291,7 +291,10 @@ function day ($chanUrl, $date) {
 		JOIN playbot_chan pc ON p.id = pc.content
 		WHERE date = :date
 		AND chan = :chan
-		AND context = 0
+		AND (
+			context = 0
+			OR context IS NULL
+		)
 		GROUP BY id');
 	$req->bindParam(':date', $date, PDO::PARAM_STR);
 	$req->bindParam(':chan', $chan, PDO::PARAM_STR);
@@ -493,7 +496,10 @@ function bySender ($chanUrl, $sender) {
 		JOIN playbot_chan pc ON p.id = pc.content
 		WHERE sender_irc = :sender
 		AND chan = :chan
-		AND context = 0
+		AND (
+			context = 0
+			OR context IS NULL
+		)
 		GROUP BY id');
 	$req->bindParam(':sender', $sender, PDO::PARAM_STR);
 	$req->bindParam(':chan', $chan, PDO::PARAM_STR);
