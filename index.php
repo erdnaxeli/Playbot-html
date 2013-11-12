@@ -1,7 +1,8 @@
 <?
 require 'Slim/Slim.php';
+\Slim\Slim::registerAutoloader();
 
-$app = new Slim();
+$app = new \Slim\Slim();
 $bdd = new PDO('mysql:host=mysql.iiens.net;dbname=assoce_nightiies', 'assoce_nightiies', 'VwuQREP5JwJQTF5h', array(
 		PDO::ATTR_ERRMODE => PDO::ERRMODE_WARNING));
 
@@ -25,7 +26,7 @@ $app->get('/:chan/senders/', 'senders');
 $app->get('/:chan/fav', 'fav');
 $app->get('/:chan/tags/:tag', 'byTag');
 $app->get('/:chan/tags/', 'tags');
-$app->get('/:chan/:date', 'day');
+$app->get('/:chan/:date', 'day')->name('day');
 $app->get('/:chan/', 'days');
 $app->get('/', 'index');
 
@@ -33,7 +34,7 @@ $app->post('/fav', 'favPost');
 
 
 function days ($chanUrl) {
-	$app = Slim::getInstance();
+	$app = \Slim\Slim::getInstance();
 	$chan = '#'.$chanUrl;
 
 	global $bdd;
@@ -99,7 +100,10 @@ INDEXHEAD;
 				echo "\n</tr>\n</tr>\n";
 
 			if ($curDay == $donnees[0])
-				echo "<td><a href='$year-$month-$donnees[0]'>$donnees[0]</a></td>\n";
+				echo "<td><a href='".$app->urlFor('day', array(
+						'chan' => $chanUrl,
+						'date' => "$year-$month-$donnees[0]"
+					))."'>$donnees[0]</a></td>\n";
 			else
 				echo "<td>$curDay</td>";
 
@@ -244,7 +248,7 @@ FOOTER;
 function favPost () {
 	global $consumer;
 	global $bdd;
-	$app = Slim::getInstance();
+	$app = \Slim\Slim::getInstance();
 
 	if (!$consumer->isLogged()) {
 		$app->halt(500, 'User not connected');
