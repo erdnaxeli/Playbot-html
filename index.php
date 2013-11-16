@@ -24,7 +24,7 @@ $app->get('/fav', 'fav');
 $app->get('/:chan/senders/:sender', 'bySender');
 $app->get('/:chan/senders/', 'senders');
 $app->get('/:chan/fav', 'fav');
-$app->get('/:chan/tags/:tag', 'byTag');
+$app->get('/:chan/tags/:tag', 'byTag')->name('tag');
 $app->get('/:chan/tags/', 'tags');
 $app->get('/:chan/:date', 'day')->name('day');
 $app->get('/:chan/', 'days');
@@ -432,7 +432,9 @@ FOOTER;
 
 function tags ($chanUrl) {
 	global $bdd;
+	$app = \Slim\Slim::getInstance();
 	$chan = '#'.$chanUrl;
+
 	$req = $bdd->prepare('SELECT tag, count(*) AS number
 		FROM playbot_tags pt
 		JOIN playbot_chan pc ON pt.id = pc.content
@@ -478,8 +480,13 @@ EOF;
 	}
 
 
-	foreach ($tags_extended as $tag)
-		echo '<a style="font-size: '.$tag['size'].'px" href="'.$tag[0].'">'.$tag[0]."</a> ";
+	foreach ($tags_extended as $tag) {
+		echo '<a style="font-size: '.$tag['size'].'px" href="';
+		echo $app->urlFor('tag', array(
+			'chan' => $chanUrl,
+			'tag' => $tag[0]));
+		echo '"">'.$tag[0].'</a> ';
+	}
 
 	echo <<<FOOTER
 </div>
