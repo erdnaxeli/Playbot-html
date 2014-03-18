@@ -1,9 +1,10 @@
 <?
 require 'Slim/Slim.php';
+require 'config.php';
 \Slim\Slim::registerAutoloader();
 
 $app = new \Slim\Slim();
-$bdd = new PDO('mysql:host=mysql.iiens.net;dbname=assoce_nightiies', 'assoce_nightiies', 'VwuQREP5JwJQTF5h', array(
+$bdd = new PDO('mysql:host='.$bdd['host'].';dbname='.$bdd['dbname'], $bdd['user'], $bdd['passwd'], array(
 		PDO::ATTR_ERRMODE => PDO::ERRMODE_WARNING));
 
 
