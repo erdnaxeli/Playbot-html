@@ -22,6 +22,8 @@ $consumer->authenticate($openid_url, $required);
 // routes
 
 $app->get('/fav', 'fav');
+$app->get('/later/', 'later');
+$app->get('/later/:nick', 'later');
 $app->get('/:chan/senders/:sender', 'bySender');
 $app->get('/:chan/senders/', 'senders');
 $app->get('/:chan/fav', 'fav');
@@ -283,6 +285,44 @@ function favPost () {
 
 		echo '1';
 	}
+}
+
+
+function later ($nick = '') {
+	global $consumer;
+	global $bdd;
+
+	include('includes/header.php');
+	include('includes/menu.php');
+
+	if ($nick) {
+		// affichage des liens
+		$req = $bdd->prepare('
+			SELECT DISTINCT
+				p.date,
+				type, url,
+				sender_irc,
+				sender, title,
+				p.id
+			FROM
+				playbot_later l
+				JOIN playbot p ON l.content = p.id
+			WHERE l.nick = :nick
+		');
+		$req->bindParam(':nick', $nick);
+		$req->execute();
+
+		echo '<div class="header">Favoris</div>';
+		printLinks ($req, $chanUrl);
+	}
+	else {
+		echo '<p>Rendez-vous sur « later/<em>votre_pseudo_irc</em> » pour voir tous vos !later.</p>';
+	}
+
+	echo <<<FOOTER
+</body>
+</html>
+FOOTER;
 }
 
 
