@@ -16,3 +16,42 @@ function fav(id) {
 		}
 	});
 }
+
+var indexPlay = 0;
+var player;
+
+function play() {
+	url = $($('a.content')[indexPlay]).attr('href');
+	if (url.indexOf("youtube") > -1) {
+		id = url.substring(url.lastIndexOf("=") + 1);
+		player = new YT.Player('player', {
+			height: '390',
+			width: '640',
+			videoId: id,
+			events: {
+				'onReady': onPlayerReady,
+				'onStateChange': onPlayerStateChange
+			}
+		});
+	}
+}
+
+function next() {
+	if (player) {
+		player.destroy();
+	}
+	indexPlay++;
+	play();
+}
+
+// autoplay video
+function onPlayerReady(event) {
+	event.target.playVideo();
+}
+
+// when video ends
+function onPlayerStateChange(event) {
+	if(event.data === 0) { 
+		next();
+	}
+}

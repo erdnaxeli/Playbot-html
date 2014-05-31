@@ -362,6 +362,8 @@ FOOTER;
 function printLinks ($req, $chan) {
 	global $consumer;
 
+	echo '<p><a onclick="play ()" href="#">Play all</a> - <a onclick="next ()" href="#">Next</a></p>';
+	echo '<div id="player"></div>';
 	echo '<div class="content">';
 	echo "<table>\n";
 	echo "<tr class='table_header'>\n";
@@ -372,7 +374,7 @@ function printLinks ($req, $chan) {
 		echo "<td>";
 		switch ($donnees[1]) {
 			case 'youtube':
-				echo "<a href='$donnees[2]'><img alt='youtube' src='/links/img/yt.png' /></a>";
+				echo "<a class='content' href='$donnees[2]'><img alt='youtube' src='/links/img/yt.png' /></a>";
 				break;
 			case 'soundcloud':
 				echo "<a href='$donnees[2]'><img alt='soundcloud' src='/links/img/sc.png' /></a>";
