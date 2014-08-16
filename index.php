@@ -608,7 +608,11 @@ FOOTER;
 function index () {
 	global $bdd;
 
-	$req = $bdd->prepare('SELECT chan FROM playbot_chan GROUP BY chan');
+	$req = $bdd->prepare('
+		SELECT chan
+		FROM playbot_chan
+		WHERE chan LIKE "#%"
+		GROUP BY chan');
 	$req->execute();
 	
 	include('includes/header.php');
