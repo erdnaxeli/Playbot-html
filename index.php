@@ -546,16 +546,12 @@ function bySender ($chanUrl, $sender) {
 	global $bdd;
 	$chan = '#'.$chanUrl;
 	$req = $bdd->prepare('
-		SELECT date, type, url, sender_irc, sender, title, p.id, GROUP_CONCAT(tag)
+		SELECT pc.date, type, url, pc.sender_irc, sender, title, p.id, GROUP_CONCAT(tag)
 		FROM playbot p
 		LEFT OUTER JOIN playbot_tags USING(id)
 		JOIN playbot_chan pc ON p.id = pc.content
-		WHERE sender_irc = :sender
+		WHERE pc.sender_irc = :sender
 		AND chan = :chan
-		AND (
-			context = 0
-			OR context IS NULL
-		)
 		GROUP BY id');
 	$req->bindParam(':sender', $sender, PDO::PARAM_STR);
 	$req->bindParam(':chan', $chan, PDO::PARAM_STR);
