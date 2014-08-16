@@ -330,15 +330,21 @@ FOOTER;
 function day ($chanUrl, $date) {
 	global $bdd;
 	$chan = '#'.$chanUrl;
+	$dateMin = "$date 00:00:00";
+	$dateMax = "$date 23:59:59";
 	$req = $bdd->prepare('
 		SELECT pc.date, type, url, pc.sender_irc, sender, title, p.id, GROUP_CONCAT(tag)
 		FROM playbot p
 		LEFT OUTER JOIN playbot_tags USING (id)
 		JOIN playbot_chan pc ON p.id = pc.content
-		WHERE pc.date = :date
+		WHERE pc.date
+			BETWEEN :date_min
+			AND :date_max
 		AND chan = :chan
-		GROUP BY id');
-	$req->bindParam(':date', $date, PDO::PARAM_STR);
+		GROUP BY id
+		ORDER BY pc.date');
+	$req->bindParam(':date_min', $dateMin, PDO::PARAM_STR);
+	$req->bindParam(':date_max', $dateMax, PDO::PARAM_STR);
 	$req->bindParam(':chan', $chan, PDO::PARAM_STR);
 	$req->execute();
 
