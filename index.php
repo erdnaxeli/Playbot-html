@@ -77,8 +77,7 @@ INDEXHEAD;
 
 	// on récupère les jours du mois pour lesquels des liens ont été postés
 	$reponse = $bdd->prepare('SELECT DISTINCT DAY(date)
-		FROM playbot p
-		JOIN playbot_chan pc ON p.id = pc.content
+		FROM playbot_chan
 		WHERE MONTH(date) = '.$month.'
 		AND YEAR(date) = '.$year.'
 		AND chan = :chan
@@ -143,8 +142,7 @@ INDEXHEAD;
 
 
 	$nbr_senders = $bdd->prepare('SELECT sender_irc, COUNT(*) AS nb
-		FROM playbot p
-		JOIN playbot_chan pc ON p.id = pc.content
+		FROM playbot_chan
 		WHERE chan = :chan
 		GROUP BY sender_irc
 		ORDER BY nb
@@ -198,7 +196,10 @@ function fav ($chanUrl = '') {
 		$login = $consumer->getSingle('http://openid.iiens.net/types/identifiant');
 
 		// affichage des liens
-		$req = $bdd->prepare('SELECT date, type, url, sender_irc, sender, title, id FROM playbot_fav NATURAL JOIN playbot WHERE user = :login');
+		$req = $bdd->prepare('SELECT "osef", type, url, "osef", sender, title, id
+						FROM playbot_fav
+						NATURAL JOIN playbot
+						WHERE user = :login');
 		$req->bindParam(':login', $login);
 		$req->execute();
 
@@ -330,16 +331,12 @@ function day ($chanUrl, $date) {
 	global $bdd;
 	$chan = '#'.$chanUrl;
 	$req = $bdd->prepare('
-		SELECT date, type, url, sender_irc, sender, title, p.id, GROUP_CONCAT(tag)
+		SELECT pc.date, type, url, pc.sender_irc, sender, title, p.id, GROUP_CONCAT(tag)
 		FROM playbot p
 		LEFT OUTER JOIN playbot_tags USING (id)
 		JOIN playbot_chan pc ON p.id = pc.content
-		WHERE date = :date
+		WHERE pc.date = :date
 		AND chan = :chan
-		AND (
-			context = 0
-			OR context IS NULL
-		)
 		GROUP BY id');
 	$req->bindParam(':date', $date, PDO::PARAM_STR);
 	$req->bindParam(':chan', $chan, PDO::PARAM_STR);
@@ -443,11 +440,11 @@ FOOTER;
 function senders ($chanUrl) {
 	global $bdd;
 	$chan = '#'.$chanUrl;
-	$req = $bdd->prepare('SELECT DISTINCT(sender_irc)
+	$req = $bdd->prepare('SELECT DISTINCT(pc.sender_irc)
 		FROM playbot p
 		JOIN playbot_chan pc ON p.id = pc.content
 		WHERE chan = :chan
-		ORDER BY sender_irc');
+		ORDER BY pc.sender_irc');
 	$req->bindParam(':chan', $chan, PDO::PARAM_STR);
 	$req->execute();
 
@@ -482,7 +479,6 @@ function tags ($chanUrl) {
 		FROM playbot_tags pt
 		JOIN playbot_chan pc ON pt.id = pc.content
 		WHERE chan = :chan
-		AND context = 0
 		GROUP BY tag
 		ORDER BY tag');
 	$req->bindParam(':chan', $chan, PDO::PARAM_STR);
@@ -575,13 +571,12 @@ function byTag ($chanUrl, $tag) {
 	$chan = '#'.$chanUrl;
 
 	$req = $bdd->prepare('
-		SELECT date, type, url, sender_irc, sender, title, p.id, GROUP_CONCAT(tag) AS tags
+		SELECT pc.date, type, url, pc.sender_irc, sender, title, p.id, GROUP_CONCAT(tag) AS tags
 		FROM playbot p
 		NATURAL JOIN playbot_tags
 		JOIN playbot_chan pc ON p.id = pc.content
 		WHERE chan = :chan
 		AND tag = :tag
-		AND context = 0
 		GROUP BY id
 		HAVING tags LIKE (:tag) or tags LIKE (:tagBefore) OR tags LIKE (:tagAfter)');
 
